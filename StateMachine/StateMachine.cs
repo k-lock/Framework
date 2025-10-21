@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Framework.Observable;
 using Framework.Utils.AsyncLock;
 using UnityEngine;
 
@@ -17,19 +18,19 @@ namespace Framework.StateMachine
         /// Async lock to ensure thread-safe state transitions.
         /// </summary>
         private readonly AsyncLock asyncLock = new();
-        
+
         /// <summary>
         /// Dictionary mapping states to their transition configurations.
         /// </summary>
         private readonly Dictionary<TState, IStateTransitionConfig<TState>> stateConfigs;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateMachine{TState}"/> class.
+        /// Initializes a new instance of the <see cref="StateMachine{TState}" /> class.
         /// </summary>
         /// <param name="configs">Dictionary of state configurations.</param>
         /// <param name="initialState">The initial state of the state machine.</param>
-        /// <exception cref="ArgumentNullException">Thrown when configs is null.</exception>
-        /// <exception cref="ArgumentException">Thrown when initialState is not found in configs.</exception>
+        /// <exception cref="ArgumentNullException">Thrown when configs are null.</exception>
+        /// <exception cref="ArgumentException">Thrown when the initialState is not found in configs.</exception>
         public StateMachine(Dictionary<TState, IStateTransitionConfig<TState>> configs, TState initialState)
         {
             stateConfigs = configs ?? throw new ArgumentNullException(nameof(configs));
@@ -38,11 +39,11 @@ namespace Framework.StateMachine
                 throw new ArgumentException($"Initial state {initialState} not found in state configs.");
             }
 
-            CurrentState = initialState;
+            currentStateObservable.Value = initialState;
         }
 
         /// <summary>
-        /// Disposes the state machine and releases resources.
+        /// Disposes of the state machine and releases resources.
         /// </summary>
         public void Dispose()
         {
@@ -51,9 +52,21 @@ namespace Framework.StateMachine
         }
 
         /// <summary>
+        /// Forces the state machine into the specified state without executing any transition logic.
+        /// </summary>
+        /// <param name="state"></param>
+        public void ForceState(TState state)
+        {
+            currentStateObservable.Value = state;
+        }
+
+        /// <summary>
         /// Gets the current state of the state machine.
         /// </summary>
-        public TState CurrentState { get; private set; }
+        public TState CurrentState => currentStateObservable.Value;
+
+        private readonly ObservableProperty<TState> currentStateObservable = new ObservableProperty<TState>();
+        public IReadOnlyObservable<TState> CurrentStateObservable => currentStateObservable;
 
         /// <summary>
         /// Attempts to transition to the given state asynchronously, handling enter/exit actions, async actions, and rollback.
@@ -63,15 +76,20 @@ namespace Framework.StateMachine
         /// <returns>True if the transition succeeded, false otherwise.</returns>
         public async UniTask<bool> TransitionToAsync(TState nextState, CancellationToken cancellationToken = default)
         {
+            TState nextAutoState = default;
+
             using (await asyncLock.LockAsync(cancellationToken))
             {
                 if (!TryGetConfigs(CurrentState, nextState, out var currentConfig, out var nextConfig))
                 {
+                    Debug.LogWarning(
+                        $"[StateMachine] ⚠️ No valid config found for transition {CurrentState} → {nextState}.");
                     return false;
                 }
 
                 if (!currentConfig.AllowsTransitionTo(CurrentState, nextState))
                 {
+                    Debug.LogWarning($"[StateMachine] ⚠️ Transition not allowed: {CurrentState} → {nextState}.");
                     return false;
                 }
 
@@ -79,27 +97,43 @@ namespace Framework.StateMachine
 
                 try
                 {
-                    ExitState(currentConfig, CurrentState);
-                    CurrentState = nextState;
+                    ExitState(currentConfig, originalState);
+                    currentStateObservable.Value = nextState;
                     EnterState(nextConfig, nextState);
                     await ExecuteAsyncAction(nextConfig, cancellationToken);
-                    return true;
+
+                    Debug.Log($"[StateMachine] ✅ Transition completed: {originalState} → {nextState}");
+
+                    if (nextConfig is { AutoTransition: true } && !IsDefault(nextConfig.OnSuccess))
+                    {
+                        nextAutoState = nextConfig.OnSuccess;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
-                    Debug.LogWarning($"[StateMachine] Transition from {originalState} to {nextState} canceled.");
+                    Debug.LogWarning($"[StateMachine] ⚠️ Transition {originalState} → {nextState} canceled.");
                     await RollbackState(currentConfig, originalState, nextState);
                     return false;
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[StateMachine] Transition failed from {originalState} to {nextState}: {ex}");
+                    Debug.LogError($"[StateMachine] ❌ Transition failed {originalState} → {nextState}: {ex}");
                     await RollbackState(currentConfig, originalState, nextState);
                     return false;
                 }
             }
+
+            if (IsDefault(nextAutoState))
+            {
+                return true;
+            }
+
+            Debug.Log($"[StateMachine] 🔁 Auto-transitioning from {nextState} → {nextAutoState}");
+            await TransitionToAsync(nextAutoState, cancellationToken);
+
+            return true;
         }
-        
+
         /// <summary>
         /// Attempts to retrieve configurations for the current and next states.
         /// </summary>
@@ -128,7 +162,7 @@ namespace Framework.StateMachine
             Debug.LogWarning($"[StateMachine] Config for next state {next} not found.");
             return false;
         }
-        
+
         /// <summary>
         /// Executes the OnExit action of the given state if available.
         /// </summary>
@@ -141,7 +175,7 @@ namespace Framework.StateMachine
                 withAction.OnExit?.Invoke(state);
             }
         }
-        
+
         /// <summary>
         /// Executes the OnEnter action of the given state if available.
         /// </summary>
@@ -154,7 +188,7 @@ namespace Framework.StateMachine
                 withAction.OnEnter?.Invoke(state);
             }
         }
-        
+
         /// <summary>
         /// Executes the asynchronous action of a state if available, respecting the cancellation token.
         /// </summary>
@@ -168,7 +202,7 @@ namespace Framework.StateMachine
                 await withAction.AsyncAction.Invoke().AttachExternalCancellation(cancellationToken);
             }
         }
-        
+
         /// <summary>
         /// Rolls back the state machine to the original state or the OnError state if configured and valid.
         /// Executes OnExit of the failed state and OnEnter of the rollback state.
@@ -186,13 +220,13 @@ namespace Framework.StateMachine
 
             TState rollbackTarget = originalState;
             if (currentConfig.OnError != null &&
-                !EqualityComparer<TState>.Default.Equals(currentConfig.OnError, default) &&
+                !IsDefault(currentConfig.OnError) &&
                 stateConfigs.ContainsKey(currentConfig.OnError))
             {
                 rollbackTarget = currentConfig.OnError;
             }
 
-            CurrentState = rollbackTarget;
+            currentStateObservable.Value = rollbackTarget;
 
             if (stateConfigs.TryGetValue(rollbackTarget, out var rollbackConfig))
             {
@@ -200,6 +234,14 @@ namespace Framework.StateMachine
             }
 
             await UniTask.Yield();
+        }
+
+        /// <summary>
+        /// Helper method to check if a value equals its default value.
+        /// </summary>
+        private static bool IsDefault<T>(T value)
+        {
+            return EqualityComparer<T>.Default.Equals(value, default);
         }
     }
 }

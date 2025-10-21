@@ -1,16 +1,45 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Framework.StateMachine
 {
     /// <summary>
     /// Builder class for creating state machine configurations.
+    /// Provides both fluent API and callback-based configuration methods.
     /// </summary>
     public static class StateConfigBuilder
     {
         /// <summary>
-        /// Creates a dictionary of state configurations from a collection of states.
+        /// Starts a fluent configuration builder for a manually defined set of states.
+        /// </summary>
+        /// <typeparam name="TState">The type used for states.</typeparam>
+        /// <param name="states">
+        /// Optional collection of allowed states. If provided, the builder will validate that only these
+        /// states are configured and referenced.
+        /// </param>
+        /// <returns>A fluent builder instance for chaining configuration calls.</returns>
+        public static FluentStateConfigBuilder<TState> CreateFluent<TState>(IEnumerable<TState> states = null)
+        {
+            return new FluentStateConfigBuilder<TState>(states);
+        }
+
+        /// <summary>
+        /// Starts a fluent configuration builder for an enum-based state machine.
+        /// Automatically extracts all enum values and enables strict state validation.
+        /// </summary>
+        /// <typeparam name="TState">The enum type used for states.</typeparam>
+        /// <returns>A fluent builder instance for chaining configuration calls.</returns>
+        public static FluentStateConfigBuilder<TState> CreateFluentForEnum<TState>() where TState : Enum
+        {
+            var enumValues = Enum.GetValues(typeof(TState)).Cast<TState>();
+            return new FluentStateConfigBuilder<TState>(enumValues);
+        }
+
+        /// <summary>
+        /// Creates a dictionary of state configurations from a collection of states using a callback.
+        /// Legacy method - consider using <see cref="CreateFluent{TState}" /> for better type safety.
         /// </summary>
         /// <typeparam name="TState">The type used for states.</typeparam>
         /// <param name="states">Collection of states to configure.</param>
@@ -20,7 +49,7 @@ namespace Framework.StateMachine
             (IEnumerable<TState> states, Action<StateTransitionConfig<TState>, TState> configure)
         {
             Dictionary<TState, IStateTransitionConfig<TState>> dict = new();
-            foreach (var state in states)
+            foreach (TState state in states)
             {
                 AddStateConfig(dict, state, configure);
             }

@@ -51,9 +51,15 @@ namespace Framework.UI.Manager
         public void Dispose()
         {
             subscriptions.Dispose();
-            if (presenters is null) return;
+            if (presenters is null)
+            {
+                return;
+            }
 
-            foreach (var presenter in presenters.Values) presenter.Dispose();
+            foreach (var presenter in presenters.Values)
+            {
+                presenter.Dispose();
+            }
 
             presenters?.Clear();
         }
@@ -76,7 +82,7 @@ namespace Framework.UI.Manager
                 return;
             }
 
-            TPresenter presenter = new TPresenter();
+            TPresenter presenter = new();
             presenterModel ??= new TPresenterModel();
 
             presenter.Initialize(rootElement, presenterModel);
@@ -124,7 +130,10 @@ namespace Framework.UI.Manager
             presenter.Dispose();
             presenters.Remove(presenterType);
 
-            if (currentPresenter == presenter) currentPresenter = null;
+            if (currentPresenter == presenter)
+            {
+                currentPresenter = null;
+            }
         }
 
         /// <summary>
@@ -167,8 +176,15 @@ namespace Framework.UI.Manager
                 return;
             }
 
-            if (currentPresenter == presenter) return;
-            if (currentPresenter != null) await HideCurrent();
+            if (currentPresenter == presenter)
+            {
+                return;
+            }
+
+            if (currentPresenter != null)
+            {
+                await HideCurrent();
+            }
 
             currentPresenter = presenter;
             currentPresenter.SetData(payload);
@@ -181,7 +197,11 @@ namespace Framework.UI.Manager
         /// </summary>
         private async UniTask HideCurrent()
         {
-            if (currentPresenter != null) await currentPresenter.HideAsync();
+            if (currentPresenter != null)
+            {
+                await currentPresenter.HideAsync();
+            }
+
             currentPresenter = null;
         }
 
@@ -191,7 +211,10 @@ namespace Framework.UI.Manager
         /// <param name="presenterEvent">The presenter event containing the target type and optional payload.</param>
         private void HandlePresenterEvent(IPresenterEvent presenterEvent)
         {
-            if (presenterEvent?.TargetPresenter == null) return;
+            if (presenterEvent?.TargetPresenter == null)
+            {
+                return;
+            }
 
             Debug.Log($"[PresenterManager] Navigate to: {presenterEvent.TargetPresenter.Name}");
             Show(presenterEvent.TargetPresenter, presenterEvent.Payload).Forget();

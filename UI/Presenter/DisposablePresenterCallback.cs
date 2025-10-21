@@ -29,7 +29,10 @@ namespace Framework.UI.Presenter
         /// </summary>
         public void Dispose()
         {
-            element.UnregisterCallback(callback);
+            if (element is { panel: not null })
+            {
+                element.UnregisterCallback(callback);
+            }
         }
     }
 }

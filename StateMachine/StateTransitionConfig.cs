@@ -5,12 +5,17 @@ using Cysharp.Threading.Tasks;
 namespace Framework.StateMachine
 {
     /// <summary>
-    /// Default implementation of <see cref="IStateTransitionConfigWithAction{TState}"/>.
+    /// Default implementation of <see cref="IStateTransitionConfigWithAction{TState}" />.
     /// Stores state transition targets, lifecycle actions, and optional async actions.
     /// </summary>
     /// <typeparam name="TState">The type used for states.</typeparam>
     public class StateTransitionConfig<TState> : IStateTransitionConfigWithAction<TState>
     {
+        /// <summary>
+        /// Indicates if the state should automatically transition after the async action completes.
+        /// </summary>
+        public bool AutoTransition { get; set; } 
+        
         /// <summary>
         /// The target state if the transition succeeds.
         /// </summary>
@@ -50,7 +55,7 @@ namespace Framework.StateMachine
         public bool AllowsTransitionTo(TState currentState, TState nextState)
         {
             return !EqualityComparer<TState>.Default.Equals(nextState, currentState) &&
-                   (EqualityComparer<TState>.Default.Equals(OnSuccess, nextState) ||
+                   (OnSuccess != null && EqualityComparer<TState>.Default.Equals(OnSuccess, nextState) ||
                     EqualityComparer<TState>.Default.Equals(ToggleState, nextState));
         }
     }
