@@ -1,0 +1,17 @@
+{
+    "name": "Framework.StateMachine",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fd9652e58f2f4b37be2a9dcdb3352fbf",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,19 @@
+{
+    "name": "Framework.UI.Presenter",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e2f1f7c558a644e9aaf15eb7bbc9fa47",
+        "GUID:bc8395526fe145adabab8e29abc1e06f",
+        "GUID:b0e29a043ef8487ba000c928dfef5aed",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
