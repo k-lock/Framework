@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace Framework.StateMachine
@@ -15,14 +14,10 @@ namespace Framework.StateMachine
         /// Starts a fluent configuration builder for a manually defined set of states.
         /// </summary>
         /// <typeparam name="TState">The type used for states.</typeparam>
-        /// <param name="states">
-        /// Optional collection of allowed states. If provided, the builder will validate that only these
-        /// states are configured and referenced.
-        /// </param>
         /// <returns>A fluent builder instance for chaining configuration calls.</returns>
-        public static FluentStateConfigBuilder<TState> CreateFluent<TState>(IEnumerable<TState> states = null)
+        public static FluentStateConfigBuilder<TState> CreateFluent<TState>()
         {
-            return new FluentStateConfigBuilder<TState>(states);
+            return new FluentStateConfigBuilder<TState>();
         }
 
         /// <summary>
@@ -33,8 +28,7 @@ namespace Framework.StateMachine
         /// <returns>A fluent builder instance for chaining configuration calls.</returns>
         public static FluentStateConfigBuilder<TState> CreateFluentForEnum<TState>() where TState : Enum
         {
-            var enumValues = Enum.GetValues(typeof(TState)).Cast<TState>();
-            return new FluentStateConfigBuilder<TState>(enumValues);
+            return new FluentStateConfigBuilder<TState>();
         }
 
         /// <summary>

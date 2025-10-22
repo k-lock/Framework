@@ -50,6 +50,23 @@ namespace Framework.StateMachine
         IFluentStateConfigBuilder<TState> OnExit(Action<TState> onExit);
 
         /// <summary>
+        /// Specifies which state should follow if the transition fails.
+        /// </summary>
+        /// <param name="errorState">The target state after a failed transition.</param>
+        /// <returns>The fluent builder instance for chaining.</returns>
+        IFluentStateConfigBuilder<TState> OnError(TState errorState);
+
+        /// <summary>
+        /// Defines allowed target states for manual transitions.
+        /// </summary>
+        IFluentStateConfigBuilder<TState> AllowTransitionsTo(params TState[] states);
+
+        /// <summary>
+        /// Defines an automatic transition to a specific target state.
+        /// </summary>
+        IFluentStateConfigBuilder<TState> WithAutoTransition(TState targetState);
+
+        /*    /// <summary>
         /// Specifies which state should follow when the transition completes successfully.
         /// </summary>
         /// <param name="nextState">The target state after a successful transition.</param>
@@ -58,19 +75,12 @@ namespace Framework.StateMachine
         IFluentStateConfigBuilder<TState> OnSuccess(TState nextState, bool autoTransition = false);
 
         /// <summary>
-        /// Specifies which state should follow if the transition fails.
+        /// Specifies multiple states that can follow when the transition completes successfully.
+        /// Cannot be used with OnSuccess and does not support auto-transition.
         /// </summary>
-        /// <param name="errorState">The target state after a failed transition.</param>
+        /// <param name="states">The target states after a successful transition.</param>
         /// <returns>The fluent builder instance for chaining.</returns>
-        IFluentStateConfigBuilder<TState> OnError(TState errorState);
-
-        /// <summary>
-        /// Defines a toggle relationship between two states.
-        /// This allows the state machine to switch back and forth between them.
-        /// </summary>
-        /// <param name="toggleState">The state to toggle to.</param>
-        /// <returns>The fluent builder instance for chaining.</returns>
-        IFluentStateConfigBuilder<TState> Toggle(TState toggleState);
+        IFluentStateConfigBuilder<TState> OnSuccessSet(params TState[] states);*/
 
         /// <summary>
         /// Completes the configuration for the current state

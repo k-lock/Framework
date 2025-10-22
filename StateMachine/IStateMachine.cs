@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -19,7 +20,12 @@ namespace Framework.StateMachine
         /// </summary>
         /// <param name="newState">The target state to transition to.</param>
         /// <param name="cancellationToken">Optional token to cancel the transition.</param>
+        /// <param name="visitedStates">
+        /// A set of states already visited during the current auto-transition chain.
+        /// Used to detect and prevent cyclic auto-transitions.
+        /// </param>
         /// <returns>True if the transition succeeded, false otherwise.</returns>
-        UniTask<bool> TransitionToAsync(TState newState, CancellationToken cancellationToken = default);
+        UniTask<bool> TransitionToAsync(TState newState, CancellationToken cancellationToken = default,
+            HashSet<TState> visitedStates = null);
     }
 }

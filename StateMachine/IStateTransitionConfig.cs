@@ -1,42 +1,46 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Framework.StateMachine
 {
     /// <summary>
-    /// Represents a configuration for a state transition.
+    /// Defines the basic structure for a state transition configuration.
+    /// Each configuration represents a single state and its transition rules.
     /// </summary>
-    /// <typeparam name="TState">The type used for states.</typeparam>
+    /// <typeparam name="TState">The enum or type used for representing states.</typeparam>
     public interface IStateTransitionConfig<TState>
     {
         /// <summary>
-        /// State to transition to on success.
+        /// Gets the set of states that this state can transition to.
         /// </summary>
         [CanBeNull]
-        TState OnSuccess { get; }
+        HashSet<TState> AllowedTransitions { get; }
 
         /// <summary>
-        /// State to transition to on error.
+        /// Gets a value indicating whether an automatic transition is configured.
+        /// </summary>
+        bool HasAutoTransition { get; }
+
+        /// <summary>
+        /// Gets the automatically triggered next state, if configured.
         /// </summary>
         [CanBeNull]
-        TState OnError { get; }
+        TState AutoTransitionTarget { get; }
 
         /// <summary>
-        /// Optional toggle state allowed for transition.
+        /// Gets or sets the state to transition to on error.
         /// </summary>
         [CanBeNull]
-        TState ToggleState { get; }
+        TState OnError { get; set; }
 
         /// <summary>
-        /// Determines whether the transition from the current state to the next state is allowed.
+        /// Checks whether a transition to the given state is allowed.
         /// </summary>
-        bool AllowsTransitionTo(TState currentState, TState nextState);
-        
-        /// <summary>
-        /// Indicates if the state should automatically transition after the async action completes.
-        /// </summary>
-        public bool AutoTransition { get; set; } 
+        /// <param name="nextState">The state to transition to.</param>
+        /// <returns>True if the transition is allowed, false otherwise.</returns>
+        bool AllowsTransitionTo(TState nextState);
     }
 
     /// <summary>
