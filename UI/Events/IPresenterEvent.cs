@@ -9,10 +9,13 @@ namespace Framework.UI.Events
     public interface IPresenterEvent
     {
         /// <summary>
-        /// The type of the target presenter this event should navigate to.
+        /// Gets the type of the target presenter that this event is intended for.
         /// </summary>
         Type TargetPresenter { get; }
 
-        public object[] Payload { get; }
+        /// <summary>
+        /// Gets the strongly typed payload for this event.
+        /// </summary>
+        object[] Payload { get; }
     }
 }

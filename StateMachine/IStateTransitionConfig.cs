@@ -1,38 +1,50 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Framework.StateMachine
 {
     /// <summary>
-    /// Represents a configuration for a state transition.
+    /// Defines the basic structure for a state transition configuration.
+    /// Each configuration represents a single state and its transition rules.
     /// </summary>
-    /// <typeparam name="TState">The type used for states.</typeparam>
+    /// <typeparam name="TState">The enum or type used for representing states.</typeparam>
     public interface IStateTransitionConfig<TState>
     {
         /// <summary>
-        /// State to transition to on success.
+        /// Gets the set of states that this state can transition to.
         /// </summary>
-        [CanBeNull] TState OnSuccess { get; }
+        [CanBeNull]
+        HashSet<TState> AllowedTransitions { get; }
 
         /// <summary>
-        /// State to transition to on error.
+        /// Gets a value indicating whether an automatic transition is configured.
         /// </summary>
-        [CanBeNull] TState OnError { get; }
+        bool HasAutoTransition { get; }
 
         /// <summary>
-        /// Optional toggle state allowed for transition.
+        /// Gets the automatically triggered next state, if configured.
         /// </summary>
-        [CanBeNull] TState ToggleState { get; }
+        [CanBeNull]
+        TState AutoTransitionTarget { get; }
 
         /// <summary>
-        /// Determines whether the transition from the current state to the next state is allowed.
+        /// Gets or sets the state to transition to on error.
         /// </summary>
-        bool AllowsTransitionTo(TState currentState, TState nextState);
+        [CanBeNull]
+        TState OnError { get; set; }
+
+        /// <summary>
+        /// Checks whether a transition to the given state is allowed.
+        /// </summary>
+        /// <param name="nextState">The state to transition to.</param>
+        /// <returns>True if the transition is allowed, false otherwise.</returns>
+        bool AllowsTransitionTo(TState nextState);
     }
 
     /// <summary>
-    /// Extends <see cref="IStateTransitionConfig{TState}"/> with enter, exit, and asynchronous actions.
+    /// Extends <see cref="IStateTransitionConfig{TState}" /> with enter, exit, and asynchronous actions.
     /// </summary>
     /// <typeparam name="TState">The type used for states.</typeparam>
     public interface IStateTransitionConfigWithAction<TState> : IStateTransitionConfig<TState>
@@ -40,16 +52,19 @@ namespace Framework.StateMachine
         /// <summary>
         /// Action to execute when entering this state.
         /// </summary>
-        [CanBeNull] Action<TState> OnEnter { get; }
+        [CanBeNull]
+        Action<TState> OnEnter { get; }
 
         /// <summary>
         /// Action to execute when exiting this state.
         /// </summary>
-        [CanBeNull] Action<TState> OnExit { get; }
+        [CanBeNull]
+        Action<TState> OnExit { get; }
 
         /// <summary>
         /// Optional asynchronous action to execute when in this state.
         /// </summary>
-        [CanBeNull] Func<UniTask> AsyncAction { get; }
+        [CanBeNull]
+        Func<UniTask> AsyncAction { get; }
     }
 }
