@@ -25,7 +25,7 @@ namespace Framework.Services
 
         public static implicit operator TService(Service<TService> service)
         {
-            return service.Value;       
+            return service.Value;
         }
     }
 }
