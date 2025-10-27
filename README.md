@@ -8,7 +8,7 @@ This framework provides modular building blocks for orchestrating asynchronous g
 - **Observables**: Lightweight observable properties, subjects, and disposables for reactive state updates without external dependencies.
 - **Services**: Interfaces, abstract bases, and a manager for lifecycle-controlled singleton services that can be lazily resolved across gameplay systems.
 - **StateMachine**: Async-aware state machine with fluent configuration, auto-transitions, rollback handling, and observable current-state exposure.
-- **Transitions**: Awaitable transition primitives that sequence or combine effects, with extension methods for visual elements, tweens, and UniTask integration.
+- [**Transitions**](https://github.com/k-lock/Framework/blob/master/Transitions/README.md): Awaitable transition primitives that sequence or combine effects, with extension methods for visual elements, tweens, and UniTask integration.
 - **UI**: Presenter-driven UI layer with events, models, and managers that decouple view logic from domain services.
 - **Utils**: Shared utilities such as async locks that support the other modules.
 
